@@ -1,0 +1,22 @@
+[Unit]
+Description=Nexus Commander OpenAI Secure MCP Tunnel (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+EnvironmentFile=-/etc/nexus-commander/tunnel.env
+Environment=CLOUDFLARED_PATH=/home/%i/.local/lib/openai-tunnel-client/cloudflared
+Environment=PATH=/home/%i/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env tunnel-client run --profile nexus-commander
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/%i/.local/state /home/%i/logres/control /home/%i/logres/logs /home/%i/logres/artifacts /var/lib/nexus-commander /home/%i/logres/work
+
+[Install]
+WantedBy=multi-user.target
