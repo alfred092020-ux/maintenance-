@@ -358,7 +358,7 @@ function requireSysctlPayload(payload: unknown): { key: 'net.ipv4.ip_forward'; v
 }
 
 interface NexusPromotePayload { sourcePath: string; sha256: string }
-const NEXUS_RUNTIME_ARCHIVE_RE = /^\/home\/ubuntu\/logres\/(?:staging|control)\/nexus-runtime-[A-Za-z0-9._:-]+\/runtime\.tar\.gz$/;
+const NEXUS_RUNTIME_ARCHIVE_RE = /^(?:\/home\/ubuntu\/logres\/(?:staging|control)|\/var\/tmp\/nexus-maintenance\/staging)\/nexus-runtime-[A-Za-z0-9._:-]+\/runtime\.tar\.gz$/;
 function requireNexusPromotePayload(payload: unknown): NexusPromotePayload {
   const p = exactKeys(payload, ['sourcePath', 'sha256']);
   if (typeof p.sourcePath !== 'string' || !NEXUS_RUNTIME_ARCHIVE_RE.test(p.sourcePath)) {
