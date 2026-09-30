@@ -5,9 +5,11 @@ PREVIOUS="/opt/nexus-commander.previous"
 POLICY="/etc/nexus-commander/privileged-policy.json"
 POLICY_BACKUP="/etc/nexus-commander/privileged-policy.json.previous"
 FAILED="/opt/nexus-commander.failed.$(date +%s)"
+UNIT_BACKUP="/var/tmp/nexus-tunnel-unit.$(date +%s).$$.bak"
 SERVICES=(nexus-privileged-executor.service nexus-tunnel@ubuntu.service nexus-control-plane@ubuntu.service)
 
 mount -o remount,rw /
+if [[ -f /etc/systemd/system/nexus-tunnel@.service ]]; then cp -f /etc/systemd/system/nexus-tunnel@.service "$UNIT_BACKUP"; fi
 cleanup() { mount -o remount,ro / >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
@@ -59,4 +61,5 @@ for service in "${SERVICES[@]}"; do
   fi
 done
 
+rm -f "$UNIT_BACKUP"
 echo "NEXUS_RUNTIME_PROMOTION_HEALTHY"
