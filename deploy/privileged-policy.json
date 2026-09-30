@@ -139,32 +139,6 @@
       ]
     },
     {
-      "id": "nexus-self-management",
-      "capabilities": [
-        {
-          "id": "nexus.service.manage",
-          "operation": "service.nexusManage",
-          "riskClass": "GOVERNED",
-          "requiredMachineCapability": "SERVICE_CONTROL",
-          "requireLogresLease": true
-        },
-        {
-          "id": "nexus.deployment.install-verified",
-          "operation": "deployment.nexusInstallVerified",
-          "riskClass": "GOVERNED",
-          "requiredMachineCapability": "HOST_PERMISSIONS",
-          "requireLogresLease": true
-        },
-        {
-          "id": "nexus.runtime.promote-verified",
-          "operation": "deployment.nexusPromoteVerified",
-          "riskClass": "GOVERNED",
-          "requiredMachineCapability": "HOST_PERMISSIONS",
-          "requireLogresLease": true
-        }
-      ]
-    },
-    {
       "id": "legacy-admin",
       "capabilities": [
         {
