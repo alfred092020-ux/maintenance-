@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026-09-29.autonomy-v2",
+  "policyVersion": "2026-09-30.maintenance-authority-v1",
   "bundles": [
     {
       "id": "devin-worker-lifecycle",
@@ -232,6 +232,32 @@
           "operation": "network.status",
           "riskClass": "HUMAN_ONLY",
           "requiredMachineCapability": "NETWORK_ADMIN"
+        }
+      ]
+    },
+    {
+      "id": "nexus-external-maintenance",
+      "capabilities": [
+        {
+          "id": "nexus.maintenance.service-manage",
+          "operation": "service.nexusMaintenanceManage",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "SERVICE_CONTROL",
+          "requireMaintenanceTransaction": true
+        },
+        {
+          "id": "nexus.maintenance.install-verified",
+          "operation": "deployment.nexusMaintenanceInstallVerified",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireMaintenanceTransaction": true
+        },
+        {
+          "id": "nexus.maintenance.promote-verified",
+          "operation": "deployment.nexusMaintenancePromoteVerified",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireMaintenanceTransaction": true
         }
       ]
     }

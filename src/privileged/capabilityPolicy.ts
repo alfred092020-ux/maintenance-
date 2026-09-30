@@ -19,6 +19,7 @@ const capabilitySchema = z.object({
   riskClass: z.enum(PRIVILEGE_RISK_CLASSES),
   requiredMachineCapability: z.enum(MACHINE_CAPABILITIES),
   requireLogresLease: z.boolean().optional(),
+  requireMaintenanceTransaction: z.boolean().optional(),
   expiresAt: z.number().int().nonnegative().optional()
 }).strict();
 
@@ -104,11 +105,13 @@ function validateConsistency(policy: CapabilityPolicyManifest, now: number): voi
       if (capability.riskClass !== 'TEMPORARY' && capability.expiresAt !== undefined) {
         throw new Error(`expiresAt is only valid for TEMPORARY capability: ${capability.id}`);
       }
-      if (capability.riskClass === 'GOVERNED' && capability.requireLogresLease !== true) {
-        throw new Error(`GOVERNED capability requires requireLogresLease: ${capability.id}`);
-      }
-      if (capability.riskClass !== 'GOVERNED' && capability.requireLogresLease !== undefined) {
-        throw new Error(`requireLogresLease is only valid for GOVERNED capability: ${capability.id}`);
+      if (capability.riskClass === 'GOVERNED') {
+        const authorities = Number(capability.requireLogresLease === true) + Number(capability.requireMaintenanceTransaction === true);
+        if (authorities !== 1) {
+          throw new Error(`GOVERNED capability requires exactly one governance authority: ${capability.id}`);
+        }
+      } else if (capability.requireLogresLease !== undefined || capability.requireMaintenanceTransaction !== undefined) {
+        throw new Error(`governance authority is only valid for GOVERNED capability: ${capability.id}`);
       }
     }
   }

@@ -40,7 +40,7 @@ export class LogresAdapter {
   constructor(
     private readonly executor: Pick<LocalExecutor, 'exec'> & Partial<Pick<LocalExecutor, 'execReadOnly' | 'readFile'>>,
     private readonly root: string,
-    private readonly privilegedClient?: Pick<PrivilegedClient, 'request'>
+    private readonly privilegedClient?: Pick<PrivilegedClient, 'request' | 'maintenanceRequest'>
   ) {}
 
   private exec(command: string, timeoutMs = 120_000, maxOutputBytes = 512 * 1024) {
@@ -385,7 +385,7 @@ export class LogresAdapter {
     );
   }
 
-  private requirePrivilegedClient(): Pick<PrivilegedClient, 'request'> {
+  private requirePrivilegedClient(): Pick<PrivilegedClient, 'request' | 'maintenanceRequest'> {
     if (!this.privilegedClient) {
       throw new Error('privileged Nexus client is not configured');
     }
@@ -429,6 +429,18 @@ export class LogresAdapter {
 
   async promoteVerifiedNexusRuntime(chatId: string, taskId: string, branch: string, sourcePath: string, sha256: string) {
     return this.governedPrivilegedRequest(chatId, taskId, branch, 'deployment.nexusPromoteVerified', { sourcePath, sha256 });
+  }
+
+  async maintenanceManageNexusService(transactionId: string, reason: string, name: string, action: 'status' | 'start' | 'stop' | 'restart') {
+    return this.requirePrivilegedClient().maintenanceRequest('service.nexusMaintenanceManage', { name, action }, { transactionId, reason, expiresAt: Date.now() + 15 * 60_000 });
+  }
+
+  async maintenanceInstallVerified(transactionId: string, reason: string, sourcePath: string, destinationPath: string, sha256: string) {
+    return this.requirePrivilegedClient().maintenanceRequest('deployment.nexusMaintenanceInstallVerified', { sourcePath, destinationPath, sha256 }, { transactionId, reason, expiresAt: Date.now() + 15 * 60_000 });
+  }
+
+  async maintenancePromoteVerified(transactionId: string, reason: string, sourcePath: string, sha256: string) {
+    return this.requirePrivilegedClient().maintenanceRequest('deployment.nexusMaintenancePromoteVerified', { sourcePath, sha256 }, { transactionId, reason, expiresAt: Date.now() + 15 * 60_000 });
   }
 
   async promoteLogresRuntime(chatId: string, taskId: string, branch: string, sha: string) {

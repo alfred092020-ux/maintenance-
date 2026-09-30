@@ -24,6 +24,7 @@ export const PRIVILEGED_OPERATIONS = [
   'systemd.logresDevinStop',
   'service.logresManage',
   'service.nexusManage',
+  'service.nexusMaintenanceManage',
   'security.logresProfileReload',
   'systemd.logresDaemonReload',
   'sysctl.logresSet',
@@ -39,10 +40,18 @@ export const PRIVILEGED_OPERATIONS = [
   'integration.logresFinishTask',
   'integration.logresWorkerLifecycle',
   'deployment.nexusInstallVerified',
-  'deployment.nexusPromoteVerified'
+  'deployment.nexusPromoteVerified',
+  'deployment.nexusMaintenanceInstallVerified',
+  'deployment.nexusMaintenancePromoteVerified'
 ] as const;
 
 export type PrivilegedOperation = (typeof PRIVILEGED_OPERATIONS)[number];
+
+export interface PrivilegedMaintenanceContextRef {
+  transactionId: string;
+  reason: string;
+  expiresAt: number;
+}
 
 export interface PrivilegedProjectContextRef {
   taskId: string;
@@ -66,6 +75,8 @@ const appArmorProfile = z.string().min(1).max(128).regex(/^logres-[A-Za-z0-9._-]
 const stagingPath = z.string().min(1).max(4096).regex(/^\/home\/ubuntu\/logres\/staging\/logres-[A-Za-z0-9._-]+$/);
 const nexusStagingPath = z.string().min(1).max(4096).regex(/^\/home\/ubuntu\/logres\/staging\/nexus-[A-Za-z0-9@_.:-]+$/);
 const nexusRuntimeArchivePath = z.string().min(1).max(4096).regex(/^\/home\/ubuntu\/logres\/(?:staging|control)\/nexus-runtime-[A-Za-z0-9._:-]+\/runtime\.tar\.gz$/);
+const nexusMaintenanceStagingPath = z.string().min(1).max(4096).regex(/^\/var\/tmp\/nexus-maintenance\/staging\/nexus-[A-Za-z0-9@_.:-]+$/);
+const nexusMaintenanceRuntimeArchivePath = z.string().min(1).max(4096).regex(/^\/var\/tmp\/nexus-maintenance\/staging\/nexus-runtime-[A-Za-z0-9._:-]+\/runtime\.tar\.gz$/);
 const nexusDestinationPath = z.string().min(1).max(4096).refine((value) => /^\/etc\/systemd\/system\/nexus-[A-Za-z0-9@_.:-]+\.service$/.test(value), { message: 'destination must be an approved Nexus service path' });
 const approvedDestinationPath = z.string().min(1).max(4096).refine((value) =>
   /^\/etc\/systemd\/system\/logres-[A-Za-z0-9@_.:-]+\.service$/.test(value) ||
@@ -117,6 +128,7 @@ const operationSchemas: Record<PrivilegedOperation, z.ZodTypeAny> = {
     isolationName: z.string().min(1).max(48).regex(/^[A-Za-z0-9._-]+$/)
   }),
   'service.nexusManage': z.object({ name: nexusServiceName, action: z.enum(['status','start','stop','restart']) }).strict(),
+  'service.nexusMaintenanceManage': z.object({ name: nexusServiceName, action: z.enum(['status','start','stop','restart']) }).strict(),
   'service.logresManage': z.object({
     name: managedServiceName,
     action: z.enum(['status', 'start', 'stop', 'restart'])
@@ -129,6 +141,8 @@ const operationSchemas: Record<PrivilegedOperation, z.ZodTypeAny> = {
   }).strict(),
   'deployment.nexusInstallVerified': z.object({ sourcePath: nexusStagingPath, destinationPath: nexusDestinationPath, sha256: sha256Hex }).strict(),
   'deployment.nexusPromoteVerified': z.object({ sourcePath: nexusRuntimeArchivePath, sha256: sha256Hex }).strict(),
+  'deployment.nexusMaintenanceInstallVerified': z.object({ sourcePath: nexusMaintenanceStagingPath, destinationPath: nexusDestinationPath, sha256: sha256Hex }).strict(),
+  'deployment.nexusMaintenancePromoteVerified': z.object({ sourcePath: nexusMaintenanceRuntimeArchivePath, sha256: sha256Hex }).strict(),
   'deployment.logresInstallVerified': z.object({
     sourcePath: stagingPath,
     destinationPath: approvedDestinationPath,
@@ -176,6 +190,7 @@ export interface PrivilegedEnvelope {
   operation: PrivilegedOperation;
   payload: unknown;
   projectContext?: PrivilegedProjectContextRef;
+  maintenanceContext?: PrivilegedMaintenanceContextRef;
   signature: string;
 }
 
@@ -184,6 +199,7 @@ export interface SignPrivilegedRequestInput {
   operation: PrivilegedOperation;
   payload: unknown;
   projectContext?: PrivilegedProjectContextRef;
+  maintenanceContext?: PrivilegedMaintenanceContextRef;
   timestamp?: number;
 }
 
@@ -195,6 +211,7 @@ const envelopeSchema = z.object({
   operation: z.enum(PRIVILEGED_OPERATIONS),
   payload: z.unknown(),
   projectContext: z.object({ taskId: logresId, workerId: logresWorkerId, branch: logresWorkerBranch }).strict().optional(),
+  maintenanceContext: z.object({ transactionId: z.string().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/), reason: z.string().min(1).max(4096), expiresAt: z.number().int().positive() }).strict().optional(),
   signature: z.string().regex(/^[a-f0-9]{64}$/)
 });
 
@@ -225,7 +242,8 @@ function unsignedEnvelope(
     machineId: envelope.machineId,
     operation: envelope.operation,
     payload: envelope.payload,
-    ...(envelope.projectContext === undefined ? {} : { projectContext: envelope.projectContext })
+    ...(envelope.projectContext === undefined ? {} : { projectContext: envelope.projectContext }),
+    ...(envelope.maintenanceContext === undefined ? {} : { maintenanceContext: envelope.maintenanceContext })
   };
 }
 
@@ -262,7 +280,8 @@ export function signPrivilegedRequest(
     machineId: input.machineId,
     operation: input.operation,
     payload,
-    ...(input.projectContext === undefined ? {} : { projectContext: input.projectContext })
+    ...(input.projectContext === undefined ? {} : { projectContext: input.projectContext }),
+    ...(input.maintenanceContext === undefined ? {} : { maintenanceContext: input.maintenanceContext })
   };
   return { ...unsigned, signature: signatureFor(unsigned, key) };
 }
@@ -301,7 +320,8 @@ export function verifyPrivilegedRequest(
     machineId: envelope.machineId,
     operation: envelope.operation,
     payload,
-    ...(envelope.projectContext === undefined ? {} : { projectContext: envelope.projectContext })
+    ...(envelope.projectContext === undefined ? {} : { projectContext: envelope.projectContext }),
+    ...(envelope.maintenanceContext === undefined ? {} : { maintenanceContext: envelope.maintenanceContext })
   };
   const expected = Buffer.from(signatureFor(unsigned, key), 'hex');
   const actual = Buffer.from(envelope.signature, 'hex');

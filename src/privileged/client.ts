@@ -1,5 +1,5 @@
 import { createConnection } from 'node:net';
-import type { PrivilegedOperation, PrivilegedProjectContextRef } from './protocol.js';
+import type { PrivilegedMaintenanceContextRef, PrivilegedOperation, PrivilegedProjectContextRef } from './protocol.js';
 import {
   signPrivilegedRequest,
   type PrivilegedEnvelope
@@ -29,6 +29,16 @@ export class PrivilegedClient {
       operation,
       payload,
       ...(projectContext === undefined ? {} : { projectContext })
+    }, this.options.key);
+    return this.sendEnvelope(envelope);
+  }
+
+  maintenanceRequest(operation: PrivilegedOperation, payload: unknown, maintenanceContext: PrivilegedMaintenanceContextRef) {
+    const envelope = signPrivilegedRequest({
+      machineId: this.options.machineId,
+      operation,
+      payload,
+      maintenanceContext
     }, this.options.key);
     return this.sendEnvelope(envelope);
   }

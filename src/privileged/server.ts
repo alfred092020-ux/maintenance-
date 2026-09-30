@@ -100,7 +100,8 @@ export function createPrivilegedServer(
             options.store,
             envelope.machineId
           ),
-          logresLease: lease
+          logresLease: lease,
+          maintenanceTransaction: envelope.maintenanceContext ?? null
         }
       );
       if (!decision.allowed) {

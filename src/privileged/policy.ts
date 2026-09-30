@@ -20,6 +20,7 @@ const REQUIRED_CAPABILITY: Record<PrivilegedOperation, MachineCapability> = {
   'systemd.logresDevinStop': 'SERVICE_CONTROL',
   'service.logresManage': 'SERVICE_CONTROL',
   'service.nexusManage': 'SERVICE_CONTROL',
+  'service.nexusMaintenanceManage': 'SERVICE_CONTROL',
   'security.logresProfileReload': 'HOST_PERMISSIONS',
   'systemd.logresDaemonReload': 'SERVICE_CONTROL',
   'sysctl.logresSet': 'NETWORK_ADMIN',
@@ -35,7 +36,9 @@ const REQUIRED_CAPABILITY: Record<PrivilegedOperation, MachineCapability> = {
   'integration.logresFinishTask': 'HOST_PERMISSIONS',
   'integration.logresWorkerLifecycle': 'HOST_PERMISSIONS',
   'deployment.nexusInstallVerified': 'HOST_PERMISSIONS',
-  'deployment.nexusPromoteVerified': 'HOST_PERMISSIONS'
+  'deployment.nexusPromoteVerified': 'HOST_PERMISSIONS',
+  'deployment.nexusMaintenanceInstallVerified': 'HOST_PERMISSIONS',
+  'deployment.nexusMaintenancePromoteVerified': 'HOST_PERMISSIONS'
 };
 
 export function requiredCapabilityFor(

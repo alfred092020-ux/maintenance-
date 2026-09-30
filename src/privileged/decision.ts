@@ -15,6 +15,7 @@ export interface PrivilegeRequestContext {
 export interface PrivilegeProjectContext {
   machineCapabilities: ReadonlySet<MachineCapability>;
   logresLease: LogresLeaseContext | null;
+  maintenanceTransaction: { transactionId: string; reason: string; expiresAt: number } | null;
 }
 
 export interface PolicyDecision {
@@ -82,11 +83,16 @@ export function evaluatePrivilegeRequest(
   }
 
   if (capability.riskClass === 'GOVERNED') {
-    if (!capability.requireLogresLease) {
-      return decision(policy, false, 'governed capability has no project-context requirement', capability.id, capability.riskClass);
-    }
-    if (!projectContext.logresLease || !Number.isFinite(projectContext.logresLease.expiresAt) || projectContext.logresLease.expiresAt <= context.now) {
-      return decision(policy, false, 'active Logres lease required', capability.id, capability.riskClass);
+    if (capability.requireLogresLease) {
+      if (!projectContext.logresLease || !Number.isFinite(projectContext.logresLease.expiresAt) || projectContext.logresLease.expiresAt <= context.now) {
+        return decision(policy, false, 'active Logres lease required', capability.id, capability.riskClass);
+      }
+    } else if (capability.requireMaintenanceTransaction) {
+      if (!projectContext.maintenanceTransaction || !Number.isFinite(projectContext.maintenanceTransaction.expiresAt) || projectContext.maintenanceTransaction.expiresAt <= context.now) {
+        return decision(policy, false, 'active maintenance transaction required', capability.id, capability.riskClass);
+      }
+    } else {
+      return decision(policy, false, 'governed capability has no governance authority', capability.id, capability.riskClass);
     }
   }
 

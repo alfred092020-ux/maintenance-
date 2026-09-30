@@ -12,7 +12,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ "$EUID" -eq 0 ]] || { echo "must run as root" >&2; exit 1; }
-[[ "$SOURCE" =~ ^/home/ubuntu/logres/(staging|control)/nexus-runtime-[A-Za-z0-9._:-]+/runtime\.tar\.gz$ ]] || { echo "invalid runtime archive path" >&2; exit 2; }
+[[ "$SOURCE" =~ ^/home/ubuntu/logres/(staging|control)/nexus-runtime-[A-Za-z0-9._:-]+/runtime\.tar\.gz$ || "$SOURCE" =~ ^/var/tmp/nexus-maintenance/staging/nexus-runtime-[A-Za-z0-9._:-]+/runtime\.tar\.gz$ ]] || { echo "invalid runtime archive path" >&2; exit 2; }
 [[ "$EXPECTED_SHA" =~ ^[a-f0-9]{64}$ ]] || { echo "invalid runtime digest" >&2; exit 2; }
 [[ -f "$SOURCE" && ! -L "$SOURCE" ]] || { echo "runtime archive must be a regular non-symlink file" >&2; exit 1; }
 [[ "$(stat -c %h "$SOURCE")" == "1" ]] || { echo "runtime archive hardlink rejected" >&2; exit 1; }

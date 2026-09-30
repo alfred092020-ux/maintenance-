@@ -561,7 +561,8 @@ export class SystemPrivilegedOperations implements PrivilegedOperationExecutor {
         }
         return { ok: true };
       }
-      case 'service.nexusManage': {
+      case 'service.nexusManage':
+      case 'service.nexusMaintenanceManage': {
         const p = requireManagedServicePayload(payload, NEXUS_MANAGED_SERVICE_RE);
         return this.runArgv({ executable: '/usr/bin/systemctl', argv: [p.action, p.name] });
       }
@@ -581,6 +582,7 @@ export class SystemPrivilegedOperations implements PrivilegedOperationExecutor {
         return this.runArgv({ executable: '/usr/sbin/sysctl', argv: ['-w', `${p.key}=${p.value}`] });
       }
       case 'deployment.nexusInstallVerified':
+      case 'deployment.nexusMaintenanceInstallVerified':
       case 'deployment.logresInstallVerified':
         return this.installVerified(requireVerifiedInstallPayload(payload));
       case 'deployment.logresRuntimePromote': {
@@ -595,7 +597,8 @@ export class SystemPrivilegedOperations implements PrivilegedOperationExecutor {
           maxOutputBytes: 2 * 1024 * 1024
         });
       }
-      case 'deployment.nexusPromoteVerified': {
+      case 'deployment.nexusPromoteVerified':
+      case 'deployment.nexusMaintenancePromoteVerified': {
         const p = requireNexusPromotePayload(payload);
         return this.runArgv({
           executable: '/opt/nexus-commander/scripts/nexus-runtime-promote.sh',

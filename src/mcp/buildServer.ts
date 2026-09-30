@@ -130,7 +130,7 @@ export interface BuildServerOptions {
   logres?: LogresAdapter;
   runner?: JobRunner;
   launchJobWorker?: (config: NexusConfig, jobId: string) => number;
-  privilegedClient?: Pick<PrivilegedClient, 'request'> | null;
+  privilegedClient?: Pick<PrivilegedClient, 'request' | 'maintenanceRequest'> | null;
   performStartupRecovery?: boolean;
 }
 
@@ -733,6 +733,27 @@ export function buildServer(options: BuildServerOptions = {}): McpServer {
       },
       async ({ chatId, taskId, branch, sourcePath, sha256 }) =>
         privilegedResult(await logres.promoteVerifiedNexusRuntime(chatId, taskId, branch, sourcePath, sha256))
+    );
+
+    const maintenanceContextSchema = {
+      transactionId: z.string().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/),
+      reason: z.string().min(1).max(4096)
+    };
+
+    server.registerTool(
+      'nexus_maintenance_service_manage',
+      { description: 'Manage an approved Nexus service under a signed maintenance transaction.', _meta: authToolMeta, inputSchema: z.object({ ...maintenanceContextSchema, name: z.string().regex(/^nexus-(?:tunnel@ubuntu|privileged-executor|agent|control-plane@ubuntu)\.service$/), action: z.enum(['status','start','stop','restart']) }).strict() },
+      async ({ transactionId, reason, name, action }) => privilegedResult(await logres.maintenanceManageNexusService(transactionId, reason, name, action))
+    );
+    server.registerTool(
+      'nexus_maintenance_install_verified',
+      { description: 'Install a digest-verified Nexus maintenance artifact without product lease semantics.', _meta: authToolMeta, inputSchema: z.object({ ...maintenanceContextSchema, sourcePath: z.string().regex(/^\/var\/tmp\/nexus-maintenance\/staging\/nexus-[A-Za-z0-9@_.:-]+$/), destinationPath: absolutePath, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict() },
+      async ({ transactionId, reason, sourcePath, destinationPath, sha256 }) => privilegedResult(await logres.maintenanceInstallVerified(transactionId, reason, sourcePath, destinationPath, sha256))
+    );
+    server.registerTool(
+      'nexus_maintenance_runtime_promote_verified',
+      { description: 'Promote a digest-verified Nexus runtime under a signed maintenance transaction without a product lease.', _meta: authToolMeta, inputSchema: z.object({ ...maintenanceContextSchema, sourcePath: z.string().regex(/^\/var\/tmp\/nexus-maintenance\/staging\/nexus-runtime-[A-Za-z0-9._:-]+\/runtime\.tar\.gz$/), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict() },
+      async ({ transactionId, reason, sourcePath, sha256 }) => privilegedResult(await logres.maintenancePromoteVerified(transactionId, reason, sourcePath, sha256))
     );
 
   }
