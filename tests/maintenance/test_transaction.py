@@ -35,4 +35,10 @@ class T(unittest.TestCase):
  def test_concurrent_transition_has_single_winner(self):
   with tempfile.TemporaryDirectory() as x:
    d=Path(x);m=d/'m';self.prep(d,m);cmd=['python3',str(CLI),'transition','--manifest',str(m),'--state','PROMOTING'];ps=[subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True) for _ in range(8)];results=[p.communicate() for p in ps];codes=[p.returncode for p in ps];self.assertEqual(1,codes.count(0));self.assertEqual('PROMOTING',json.loads(m.read_text())['state'])
+ def test_corrupt_manifest_fails_closed(self):
+  with tempfile.TemporaryDirectory() as x:
+   m=Path(x)/'m';m.write_text('{bad');self.assertNotEqual(0,self.r('recover','--manifest',str(m),ok=False).returncode)
+ def test_unknown_state_fails_closed(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);z=json.loads(m.read_text());z['state']='ALIEN';m.write_text(json.dumps(z));self.assertNotEqual(0,self.r('recover','--manifest',str(m),ok=False).returncode)
 if __name__=='__main__':unittest.main()
