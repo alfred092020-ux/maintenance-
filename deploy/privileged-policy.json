@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-09-29.autonomy-v2",
+  "bundles": [
+    {
+      "id": "devin-worker-lifecycle",
+      "capabilities": [
+        {
+          "id": "devin.network.provision",
+          "operation": "network.logresDevinProvision",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "NETWORK_ADMIN",
+          "requireLogresLease": true
+        },
+        {
+          "id": "devin.network.teardown",
+          "operation": "network.logresDevinTeardown",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "NETWORK_ADMIN"
+        },
+        {
+          "id": "devin.worker.start",
+          "operation": "systemd.logresDevinStart",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "SERVICE_CONTROL",
+          "requireLogresLease": true
+        },
+        {
+          "id": "devin.worker.stop",
+          "operation": "systemd.logresDevinStop",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        }
+      ]
+    },
+    {
+      "id": "logres-maintenance",
+      "capabilities": [
+        {
+          "id": "logres.service.manage",
+          "operation": "service.logresManage",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "SERVICE_CONTROL",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.security.profile-reload",
+          "operation": "security.logresProfileReload",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.systemd.daemon-reload",
+          "operation": "systemd.logresDaemonReload",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "SERVICE_CONTROL",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.sysctl.set",
+          "operation": "sysctl.logresSet",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "NETWORK_ADMIN",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.integration.worker-lifecycle",
+          "operation": "integration.logresWorkerLifecycle",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "HOST_PERMISSIONS"
+        },
+        {
+          "id": "logres.integration.verify",
+          "operation": "integration.logresVerify",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "AUTONOMOUS_EXEC"
+        },
+        {
+          "id": "logres.integration.device",
+          "operation": "integration.logresDevice",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "AUTONOMOUS_EXEC"
+        },
+        {
+          "id": "logres.integration.brain",
+          "operation": "integration.logresBrain",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "HOST_PERMISSIONS"
+        },
+        {
+          "id": "logres.integration.coordinator",
+          "operation": "integration.logresCoordinator",
+          "riskClass": "AUTO",
+          "requiredMachineCapability": "AUTONOMOUS_EXEC"
+        },
+        {
+          "id": "logres.integration.vm-exec",
+          "operation": "integration.logresVmExec",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "AUTONOMOUS_EXEC",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.integration.candidate-commit",
+          "operation": "integration.logresCandidateCommit",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "AUTONOMOUS_EXEC",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.integration.finish-task",
+          "operation": "integration.logresFinishTask",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.integration.preflight",
+          "operation": "integration.logresPreflight",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.deployment.install-verified",
+          "operation": "deployment.logresInstallVerified",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        },
+        {
+          "id": "logres.runtime.promote",
+          "operation": "deployment.logresRuntimePromote",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        }
+      ]
+    },
+    {
+      "id": "nexus-self-management",
+      "capabilities": [
+        {
+          "id": "nexus.service.manage",
+          "operation": "service.nexusManage",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "SERVICE_CONTROL",
+          "requireLogresLease": true
+        },
+        {
+          "id": "nexus.deployment.install-verified",
+          "operation": "deployment.nexusInstallVerified",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        },
+        {
+          "id": "nexus.runtime.promote-verified",
+          "operation": "deployment.nexusPromoteVerified",
+          "riskClass": "GOVERNED",
+          "requiredMachineCapability": "HOST_PERMISSIONS",
+          "requireLogresLease": true
+        }
+      ]
+    },
+    {
+      "id": "legacy-admin",
+      "capabilities": [
+        {
+          "id": "legacy.exec",
+          "operation": "process.execArgv",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "PRIVILEGED_EXECUTOR"
+        },
+        {
+          "id": "legacy.service.status",
+          "operation": "service.status",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.service.start",
+          "operation": "service.start",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.service.stop",
+          "operation": "service.stop",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.service.restart",
+          "operation": "service.restart",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.service.enable",
+          "operation": "service.enable",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.service.disable",
+          "operation": "service.disable",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "SERVICE_CONTROL"
+        },
+        {
+          "id": "legacy.package.install",
+          "operation": "package.install",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "PACKAGE_INSTALL"
+        },
+        {
+          "id": "legacy.filesystem.chmod",
+          "operation": "filesystem.chmod",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "HOST_PERMISSIONS"
+        },
+        {
+          "id": "legacy.filesystem.chown",
+          "operation": "filesystem.chown",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "HOST_PERMISSIONS"
+        },
+        {
+          "id": "legacy.network.status",
+          "operation": "network.status",
+          "riskClass": "HUMAN_ONLY",
+          "requiredMachineCapability": "NETWORK_ADMIN"
+        }
+      ]
+    }
+  ]
+}

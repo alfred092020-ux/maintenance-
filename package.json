@@ -1,0 +1,27 @@
+{
+  "name": "nexus-commander",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bash scripts/run-tests.sh",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "mcp": "tsx src/mcp/stdio.ts",
+    "mcp:http": "tsx src/mcp/http.ts",
+    "control": "tsx src/control/main.ts",
+    "nexus": "bash scripts/run-nexus-cli.sh"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "jose": "^6.1.0",
+    "tsx": "4.23.15",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "26.6.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  }
+}
