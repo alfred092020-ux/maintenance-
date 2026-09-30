@@ -1,0 +1,3 @@
+import type { ProjectAdapter } from './controlLoop.js';
+export class ProjectRegistry {private projects=new Map<string,ProjectAdapter>();register(p:ProjectAdapter){if(this.projects.has(p.projectId))throw new Error('duplicate project');this.projects.set(p.projectId,p)}get(id:string){const p=this.projects.get(id);if(!p)throw new Error('unknown project');return p}list(){return [...this.projects.keys()].sort()}}
+export function isolatedProjectKey(projectId:string,taskId:string){if(!/^[A-Za-z0-9._:-]+$/.test(projectId)||!/^[A-Za-z0-9._:-]+$/.test(taskId))throw new Error('invalid identity');return `${projectId}::${taskId}`}

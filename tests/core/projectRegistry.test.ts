@@ -1,0 +1,2 @@
+import {describe,expect,it} from 'vitest';import {isolatedProjectKey,ProjectRegistry} from '../../src/core/projectRegistry.js';
+describe('multi-project registry',()=>{it('isolates project task identities',()=>expect(isolatedProjectKey('alpha','T1')).not.toBe(isolatedProjectKey('beta','T1')));it('rejects duplicate project registration',()=>{const r=new ProjectRegistry();const p:any={projectId:'a'};r.register(p);expect(()=>r.register(p)).toThrow()})});
