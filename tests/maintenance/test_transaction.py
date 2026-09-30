@@ -20,4 +20,10 @@ class T(unittest.TestCase):
  def test_illegal_skip_rejected(self):
   with tempfile.TemporaryDirectory() as x:
    d=Path(x);m=d/'m';self.prep(d,m);self.assertNotEqual(0,self.r('transition','--manifest',str(m),'--state','COMMITTED',ok=False).returncode)
+ def test_rollback_is_terminal(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);self.r('transition','--manifest',str(m),'--state','PROMOTING');self.r('transition','--manifest',str(m),'--state','ROLLED_BACK');self.assertIn('NO_ACTION',self.r('recover','--manifest',str(m)).stdout);self.assertNotEqual(0,self.r('transition','--manifest',str(m),'--state','PROMOTING',ok=False).returncode)
+ def test_validating_crash_requires_rollback(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);self.r('transition','--manifest',str(m),'--state','PROMOTING');self.r('transition','--manifest',str(m),'--state','VALIDATING');self.assertIn('ROLLBACK_REQUIRED old',self.r('recover','--manifest',str(m)).stdout)
 if __name__=='__main__':unittest.main()
