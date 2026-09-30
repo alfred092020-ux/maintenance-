@@ -50,6 +50,7 @@ for service in "${SERVICES[@]}"; do
     mv /opt/nexus-commander "$FAILED" || true
     if [[ -d "$PREVIOUS" ]]; then mv "$PREVIOUS" /opt/nexus-commander; fi
     if [[ -f "$POLICY_BACKUP" ]]; then cp -f "$POLICY_BACKUP" "$POLICY"; chmod 0640 "$POLICY"; chown root:nexus "$POLICY"; fi
+    if [[ -f "$UNIT_BACKUP" ]]; then install -o root -g root -m 0644 "$UNIT_BACKUP" /etc/systemd/system/nexus-tunnel@.service; fi
     chmod -R a+rX,go-w /opt/nexus-commander >/dev/null 2>&1 || true
     systemctl daemon-reload
     systemctl restart "${SERVICES[@]}"

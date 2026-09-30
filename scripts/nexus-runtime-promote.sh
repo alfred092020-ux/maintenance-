@@ -50,7 +50,7 @@ while IFS= read -r entry; do
   [[ -z "$entry" ]] && continue
   [[ "$entry" != /* && "$entry" != *"../"* && "$entry" != ".." ]] || { echo "unsafe archive entry: $entry" >&2; exit 1; }
   case "$entry" in
-    dist|dist/*|src|src/*|deploy|deploy/privileged-policy.json|deploy/systemd|deploy/systemd/nexus-tunnel@.service|maintenance|maintenance/transaction.py|scripts|scripts/nexus-runtime-promote.sh|scripts/nexus-runtime-post-promote.sh|scripts/logres-runtime-promote-root.sh|package.json|package-lock.json) ;;
+    dist|dist/*|src|src/*|deploy|deploy/privileged-policy.json|deploy/systemd|deploy/systemd/nexus-tunnel@.service|maintenance|maintenance/transaction.py|maintenance/certify.py|maintenance/break_glass.sh|scripts|scripts/nexus-runtime-promote.sh|scripts/nexus-runtime-post-promote.sh|scripts/logres-runtime-promote-root.sh|package.json|package-lock.json) ;;
     *) echo "unexpected runtime archive entry: $entry" >&2; exit 1 ;;
   esac
 done < <(tar -tzf "$SOURCE")
