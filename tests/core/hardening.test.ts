@@ -1,0 +1,17 @@
+import {describe,expect,it} from 'vitest';
+import {minimumBlockerCut,OutcomeHistory,stageReceipt,staleStage,validateBudget} from '../../src/core/controlLoop.js';
+import {parallelWaves,ReadyToMergeQueue,invalidateReceipts} from '../../src/core/pipeline.js';
+import {allocate} from '../../src/core/scheduler.js';
+import {authorityChain,decide,riskPlan,speculativeReceiptValid} from '../../src/core/verifiedProgress.js';
+describe('hardening and adversarial invariants',()=>{
+ it('rejects dependency cycles rather than recursing forever',()=>expect(()=>minimumBlockerCut('a',{a:['b'],b:['a']},new Set())).toThrow(/cycle/));
+ it('rejects impossible or non-finite resource budgets',()=>{expect(validateBudget({workerSlots:2,cpu:NaN,memoryGb:1,heavyE2eSlots:1,deviceSlots:0,integrationWriters:1})).toBe(false);expect(validateBudget({workerSlots:1,cpu:1,memoryGb:1,heavyE2eSlots:2,deviceSlots:0,integrationWriters:1})).toBe(false)});
+ it('fails closed for invalid decision numbers',()=>{const x=decide([{id:'x',priority:NaN,unlockValue:Infinity,successLikelihood:NaN,verificationConfidence:1,expectedMinutes:0,resourceCost:0,capability:'x',claimedState:'R',observedState:'R'}])[0]!;expect(x.eligible).toBe(false);expect(Number.isFinite(x.expectedVerifiedProgress)).toBe(true)});
+ it('honors explicit zero heavy capacity',()=>expect(riskPlan(['src/privileged/x.ts'],8,0,1,0).heavySlots).toBe(0));
+ it('rejects empty authority identities',()=>expect(authorityChain('','','i','o').eligible).toBe(false));
+ it('detects directory-overlap invalidation',()=>{expect(speculativeReceiptValid({baseSha:'old',paths:['src/core'],independent:true},'new',['src/core/x.ts'])).toBe(false);expect(invalidateReceipts([{id:'r',baseSha:'old',paths:['src/core']}],'new',['src/core/x.ts'])[0]!.valid).toBe(false)});
+ it('rejects duplicate jobs, unknown dependencies, and unavailable heavy capacity',()=>{expect(()=>parallelWaves([{id:'a',lane:'e2e',heavy:true,estimatedMs:1,dependencies:[]}],0)).toThrow(/capacity/);expect(()=>parallelWaves([{id:'a',lane:'build',heavy:false,estimatedMs:1,dependencies:[]},{id:'a',lane:'build',heavy:false,estimatedMs:1,dependencies:[]}],1)).toThrow(/duplicate/);expect(()=>parallelWaves([{id:'a',lane:'build',heavy:false,estimatedMs:1,dependencies:['missing']}],1)).toThrow(/invalid/)});
+ it('rejects duplicate ready candidates',()=>{const q=new ReadyToMergeQueue<any>();q.enqueue({id:'a',verified:true,baseSha:'x'});expect(()=>q.enqueue({id:'a',verified:true,baseSha:'x'})).toThrow(/duplicate/)});
+ it('validates heartbeat and outcome inputs',()=>{expect(()=>stageReceipt('', 'a',1)).toThrow();expect(staleStage({heartbeatAt:NaN,expectedDurationMs:1},2)).toBe(true);const h=new OutcomeHistory();expect(()=>h.record('x',true,-1)).toThrow()});
+ it('holds allocation limits under 1000 randomized deterministic items',()=>{let seed=17;const rnd=()=>((seed=(seed*48271)%2147483647)/2147483647);for(let run=0;run<30;run++){const items=Array.from({length:1000},(_,i)=>({id:`${run}-${i}`,stage:(rnd()<.1?'integration':'verification') as any,priority:Math.floor(rnd()*4),evp:rnd()*10,blocked:rnd()<.15,heavy:rnd()<.3,device:rnd()<.1,capability:'x'}));const b={workerSlots:10,cpu:8,memoryGb:16,heavyE2eSlots:3,deviceSlots:1,integrationWriters:1};const x=allocate(items,b).selected;expect(x.length).toBeLessThanOrEqual(10);expect(x.filter(i=>i.heavy).length).toBeLessThanOrEqual(3);expect(x.filter(i=>i.device).length).toBeLessThanOrEqual(1);expect(x.filter(i=>i.stage==='integration').length).toBeLessThanOrEqual(1);expect(x.every(i=>!i.blocked)).toBe(true)}});
+});

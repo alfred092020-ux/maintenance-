@@ -26,4 +26,13 @@ class T(unittest.TestCase):
  def test_validating_crash_requires_rollback(self):
   with tempfile.TemporaryDirectory() as x:
    d=Path(x);m=d/'m';self.prep(d,m);self.r('transition','--manifest',str(m),'--state','PROMOTING');self.r('transition','--manifest',str(m),'--state','VALIDATING');self.assertIn('ROLLBACK_REQUIRED old',self.r('recover','--manifest',str(m)).stdout)
+ def test_archive_tamper_blocks_promotion(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);json.loads(m.read_text());Path(json.loads(m.read_text())['archive_path']).write_bytes(b'tampered');self.assertNotEqual(0,self.r('transition','--manifest',str(m),'--state','PROMOTING',ok=False).returncode);self.assertEqual('PREPARED',json.loads(m.read_text())['state'])
+ def test_commit_requires_exact_candidate_sha(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);self.r('transition','--manifest',str(m),'--state','PROMOTING');self.r('transition','--manifest',str(m),'--state','VALIDATING');self.assertNotEqual(0,self.r('transition','--manifest',str(m),'--state','COMMITTED','--final-runtime-sha','wrong',ok=False).returncode)
+ def test_concurrent_transition_has_single_winner(self):
+  with tempfile.TemporaryDirectory() as x:
+   d=Path(x);m=d/'m';self.prep(d,m);cmd=['python3',str(CLI),'transition','--manifest',str(m),'--state','PROMOTING'];ps=[subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True) for _ in range(8)];results=[p.communicate() for p in ps];codes=[p.returncode for p in ps];self.assertEqual(1,codes.count(0));self.assertEqual('PROMOTING',json.loads(m.read_text())['state'])
 if __name__=='__main__':unittest.main()
