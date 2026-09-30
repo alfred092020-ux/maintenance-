@@ -25,6 +25,10 @@ for required in \
   runuser -u ubuntu -- test -r "/opt/nexus-commander/$required" || { echo "ubuntu cannot read runtime entrypoint: $required" >&2; exit 1; }
 done
 
+if [[ -f /opt/nexus-commander/deploy/systemd/nexus-tunnel@.service ]]; then
+  install -o root -g root -m 0644 /opt/nexus-commander/deploy/systemd/nexus-tunnel@.service /etc/systemd/system/nexus-tunnel@.service
+  rm -f /etc/systemd/system/nexus-tunnel@ubuntu.service.d/worker-write.conf
+fi
 systemctl daemon-reload
 systemctl restart "${SERVICES[@]}"
 for service in "${SERVICES[@]}"; do
